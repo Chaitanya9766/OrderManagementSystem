@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Local AI Assistant</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0d1117; color: #c9d1d9; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .chat-container { width: 100%; max-width: 650px; background: #161b22; padding: 20px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); display: flex; flex-direction: column; height: 85vh; border: 1px solid #30363d; }
+        h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 1px solid #30363d; padding-bottom: 10px; color: #58a6ff; display: flex; align-items: center; gap: 8px; }
+        .quick-actions { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .chip { background: #21262d; border: 1px solid #30363d; color: #8b949e; padding: 6px 12px; border-radius: 16px; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
+        .chip:hover { background: #30363d; color: #f0f6fc; border-color: #8b949e; }
+        .chat-box { flex: 1; overflow-y: auto; border: 1px solid #30363d; padding: 15px; border-radius: 8px; margin-bottom: 15px; background: #0d1117; display: flex; flex-direction: column; gap: 12px; }
+        .message { padding: 10px 14px; border-radius: 8px; max-width: 80%; line-height: 1.5; word-wrap: break-word; font-size: 0.95rem; }
+        .user-message { background: #1f6feb; color: white; align-self: flex-end; }
+        .bot-message { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; align-self: flex-start; }
+        .input-group { display: flex; gap: 10px; }
+        input { flex: 1; background: #0d1117; border: 1px solid #30363d; color: white; padding: 12px; border-radius: 8px; font-size: 0.95rem; outline: none; }
+        input:focus { border-color: #58a6ff; }
+        button.send-btn { padding: 10px 20px; background: #238636; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button.send-btn:hover { background: #2ea043; }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <h2>🤖 Local AI & Order Assistant</h2>
+        
+        <div class="quick-actions">
+            <button class="chip" onclick="sendPreset('Hello! What can you do?')">👋 Say Hello</button>
+            <button class="chip" onclick="sendPreset('Explain dependency injection in Spring Boot briefly.')">💡 General Question</button>
+            <button class="chip" onclick="sendPreset('Can you check the status of order ORD-001?')">🔍 Check ORD-001</button>
+        </div>
+
+        <div id="chatBox" class="chat-box">
+            <div class="message bot-message">Hello! I am powered locally by Ollama. Ask me general questions or manage your orders!</div>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="userInput" placeholder="Ask anything or check an order..." onkeypress="handleKeyPress(event)">
+            <button class="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        async function sendPreset(text) {
+            document.getElementById("userInput").value = text;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const inputField = document.getElementById("userInput");
+            const chatBox = document.getElementById("chatBox");
+            const message = inputField.value.trim();
+
+            if (!message) return;
+
+            const userDiv = document.createElement("div");
+            userDiv.className = "message user-message";
+            userDiv.textContent = message;
+            chatBox.appendChild(userDiv);
+
+            inputField.value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            const botDiv = document.createElement("div");
+            botDiv.className = "message bot-message";
+            botDiv.textContent = "Thinking...";
+            chatBox.appendChild(botDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const response = await fetch(`/chat?message=${encodeURIComponent(message)}&userId=web-user`);
+                const reply = await response.text();
+                botDiv.textContent = reply;
+            } catch (error) {
+                botDiv.textContent = "Error: Could not reach the agent backend.";
+                botDiv.style.color = "#f85149";
+            }
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>
